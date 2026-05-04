@@ -1,0 +1,15 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Payment Success</title><link rel="stylesheet" href="style.css"></head><body><header class="header"><a class="logo" href="index.html">Palestinian Bridal</a><nav><a href="index.html">Home</a><a href="dresses.html">Dresses</a><span id="headerPageLinks" class="header-page-links"></span><a href="contact.html">Contact</a><a href="account.html">Account</a><a href="cart.html">Cart <span id="cartCount">0</span></a></nav></header><section class="page-head"><p class="small-title">Payment Complete</p><h1>Thank You</h1><p>Your test card payment was completed.</p></section><section class="section top-small"><div id="successBox" class="box"></div></section><footer><p>© 2026 <span class="logo">Palestinian Bridal</span></p></footer><script src="script.js"></script><script>
+applySite();updateCartCount();renderHeaderPageLinks();
+const pending=localStorage.getItem("pendingStripeOrder");
+if(pending){
+ const order=JSON.parse(pending);
+ order.status="Paid";
+ order.stripeSessionId=new URLSearchParams(location.search).get("session_id")||"";
+ saveFinalOrder(order);
+ clearCart();
+ localStorage.removeItem("pendingStripeOrder");
+ document.getElementById("successBox").innerHTML=`<h2>Order Confirmed</h2><p><strong>Order ID:</strong> ${order.id}</p><p><strong>Status:</strong> Paid</p><p><strong>Total:</strong> ${money(order.total)}</p><a class="btn main-btn" href="order.html?id=${order.id}">View Order</a>`;
+}else{
+ document.getElementById("successBox").innerHTML=`<h2>No pending order found</h2><p>If you already completed checkout, check your Stripe dashboard.</p><a class="btn main-btn" href="index.html">Back Home</a>`;
+}
+</script></body></html>

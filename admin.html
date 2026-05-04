@@ -1,0 +1,99 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin</title><link rel="stylesheet" href="style.css"></head><body class="admin-body"><main class="admin-wrap">
+<section id="loginBox" class="box admin-login"><h1>Admin Login</h1><p class="note">Default main admin: admin / password<br>Default secondary admin: manager / password2</p><label>Username<input id="adminUser" type="text"></label><label>Password<input id="adminPass" type="password"></label><button class="btn main-btn full" onclick="adminLogin()">Login</button><a class="btn light-btn full" href="index.html">Back to Website</a><p id="loginMessage" class="error"></p><div id="logoutMessage" class="hidden"><p class="note">You are logged out.</p><a class="btn light-btn full" href="index.html">Go to Website</a></div></section>
+<section id="adminPanel" class="hidden">
+<div class="admin-top"><div><h1>Full Admin Panel</h1><p>Logged in as: <strong id="activeUserName"></strong></p></div><div><a class="btn light-btn" href="index.html">View Website</a><button class="btn danger-btn" onclick="adminLogout()">Logout</button></div></div>
+<div class="admin-tabs">
+<button class="tab-btn active" data-tab="siteTab" onclick="showTab('siteTab')">Website</button>
+<button class="tab-btn" data-tab="productsTab" onclick="showTab('productsTab')">Dresses</button><button class="tab-btn" data-tab="pagesTab" onclick="showTab('pagesTab')">Pages</button>
+<button class="tab-btn" data-tab="ordersTab" onclick="showTab('ordersTab')">Orders</button><button class="tab-btn" data-tab="customersTab" onclick="showTab('customersTab')">Customers</button><button class="tab-btn" data-tab="discountsTab" onclick="showTab('discountsTab')">Discount Codes</button>
+<button class="tab-btn" data-tab="paymentTab" onclick="showTab('paymentTab')">Payment / Contact</button>
+<button class="tab-btn" data-tab="deliveryTab" onclick="showTab('deliveryTab')">Delivery</button>
+<button class="tab-btn" data-tab="usersTab" onclick="showTab('usersTab')">Admin Accounts</button>
+</div>
+<div id="siteTab" class="admin-section">
+<div class="box"><h2>Website Text & Design</h2><div class="form-grid">
+<label>Website Name<input id="siteName" type="text"></label><label>Hero Small Text<input id="heroSmall" type="text"></label>
+<label>Main Big Title<input id="heroTitle" type="text"></label><label>Main Description<input id="heroText" type="text"></label>
+<label>Main Button Text<input id="heroButton" type="text"></label><label>Main Hero Picture URL<input id="heroImage" type="text"></label>
+<label class="check-row"><input id="heroSliderEnabled" type="checkbox"> Turn On Homepage Slider</label><label>Slider Picture URLs, one per line<textarea id="heroSliderImages" placeholder="Paste one image URL per line"></textarea></label>
+<label>Featured Small Text<input id="featuredSmall" type="text"></label><label>Featured Title<input id="featuredTitle" type="text"></label>
+<label>Featured Description<input id="featuredText" type="text"></label><label>Banner Title<input id="bannerTitle" type="text"></label>
+<label>Banner Text<input id="bannerText" type="text"></label><label>Banner Button Text<input id="bannerButton" type="text"></label>
+<label>Business Phone<input id="phone" type="text"></label><label>Business Address<input id="businessAddress" type="text"></label>
+<label>Main Color<input id="primaryColor" type="color"></label><label>Darker Main Color<input id="darkColor" type="color"></label>
+<label>Gold Accent<input id="goldColor" type="color"></label><label>Background Color<input id="backgroundColor" type="color"></label>
+</div><button class="btn main-btn full" onclick="saveSiteSettings()">Save Website</button><button class="btn light-btn full" onclick="resetSiteSettings()">Reset Website</button></div>
+</div>
+
+<div id="pagesTab" class="admin-section hidden">
+<div class="box builder-help"><strong>Page Section Builder:</strong> Create pages using sections like text, image, banner, button, contact, spacer, and dress grid.</div>
+<div class="admin-grid">
+<div class="box"><h2>Page Settings</h2>
+<input id="pageEditId" type="hidden">
+<label>Page Title<input id="pageTitle" type="text" placeholder="About Us"></label>
+<label>Menu Button Label<input id="pageNavLabel" type="text" placeholder="About"></label>
+<label class="check-row"><input id="pageEnabled" type="checkbox" checked> Page Enabled</label>
+<label class="check-row"><input id="pageShowHeader" type="checkbox"> Show In Top Menu</label>
+<label class="check-row"><input id="pageShowHome" type="checkbox" checked> Show On Homepage Buttons</label>
+<button class="btn main-btn full" onclick="savePage()">Save Page</button>
+<button class="btn light-btn full" onclick="clearPageForm()">Clear Page Form</button>
+</div>
+<div class="box"><h2>Website Pages</h2><div id="pagesList"></div></div>
+</div>
+<div class="admin-grid">
+<div class="box"><h2>Add / Edit Page Section</h2>
+<label>Section Type<select id="sectionType" onchange="sectionTypeChanged()">
+<option value="text">Text</option>
+<option value="image">Image</option>
+<option value="banner">Banner</option>
+<option value="button">Button</option>
+<option value="contact">Contact</option>
+<option value="spacer">Spacer</option>
+<option value="dressGrid">Dress Grid</option>
+</select></label>
+<label class="section-field field-text field-image field-banner field-contact field-dressGrid">Section Title<input id="sectionTitle" type="text"></label>
+<label class="section-field field-text field-banner field-contact">Text<textarea id="sectionText"></textarea></label>
+<label class="section-field field-image field-banner">Image URL<input id="sectionImage" type="text"></label>
+<label class="section-field field-button field-banner field-contact">Button Text<input id="sectionButtonText" type="text"></label>
+<label class="section-field field-button field-banner field-contact">Button Link<input id="sectionButtonLink" type="text" placeholder="contact.html"></label>
+<label class="section-field field-dressGrid">Dress Category<input id="sectionCategory" type="text" placeholder="Bridal"></label>
+<label class="section-field field-dressGrid">Dress Tag<input id="sectionTag" type="text" placeholder="henna"></label>
+<label class="section-field field-spacer">Spacer Height<input id="sectionHeight" type="number" placeholder="40"></label>
+<button class="btn main-btn full" onclick="saveSection()">Save Section</button>
+<button class="btn light-btn full" onclick="clearSectionForm()">Clear Section</button>
+</div>
+<div class="box"><h2>Sections On This Page</h2><div id="sectionBuilderList" class="section-builder-list"></div></div>
+</div>
+</div>
+<div id="productsTab" class="admin-section hidden"><div class="admin-grid"><div class="box"><h2>Add / Edit Dress</h2><input id="editId" type="hidden"><label>Dress Name<input id="dressName" type="text"></label><label>Before Price<input id="dressBeforePrice" type="number" placeholder="399"></label><label>After / Sale Price<input id="dressPrice" type="number" placeholder="299"></label><label>Description<textarea id="dressDescription"></textarea></label><label>Category<input id="dressCategory" type="text" placeholder="Bridal"></label><label>Tags<input id="dressTags" type="text" placeholder="henna, red, embroidery"></label><label>Main Image URL<input id="dressImage" type="text"></label><label>More Image URLs, one per line<textarea id="dressImages"></textarea></label><button class="btn main-btn full" onclick="saveDress()">Save Dress</button><button class="btn light-btn full" onclick="clearDressForm()">Clear</button></div><div class="box"><h2>Current Dresses</h2><div id="adminDressList"></div></div></div></div>
+<div id="ordersTab" class="admin-section hidden"><div class="box"><h2>Orders</h2><button class="btn light-btn" onclick="exportOrders()">Export Orders</button><div id="ordersList"></div></div><div id="orderEditor"></div></div>
+<div id="paymentTab" class="admin-section hidden"><div class="box"><h2>Payment / Contact Settings</h2><div class="form-grid">
+<label>WhatsApp Number<input id="settingWhatsapp" type="text" placeholder="15551234567"></label>
+<label>Zelle Name<input id="settingZelleName" type="text" placeholder="Your business/name"></label>
+<label>Zelle Phone or Email<input id="settingZelleContact" type="text" placeholder="Phone or email for Zelle"></label>
+<label>PayPal Link<input id="paypalLink" type="text" placeholder="Paste PayPal link"></label>
+<label>Credit Card Payment Link<input id="creditCardLink" type="text" placeholder="Optional backup payment link"></label><label>Stripe Publishable Key<input id="stripePublishableKey" type="text" placeholder="pk_test_..."></label>
+<label>Google Maps API Key<input id="settingGoogleApiKey" type="text" placeholder="Paste Google Maps API key here"></label>
+<label>Tax Percent<input id="settingTax" type="number" step="0.01" placeholder="6"></label>
+<label class="check-row"><input id="enableCreditCard" type="checkbox"> Enable Credit Card</label>
+<label class="check-row"><input id="enablePayPal" type="checkbox"> Enable PayPal</label>
+<label class="check-row"><input id="enableZelle" type="checkbox"> Enable Zelle</label>
+<label class="check-row"><input id="enableCash" type="checkbox"> Enable Cash</label>
+<label class="check-row"><input id="settingAllowPayLater" type="checkbox"> Allow Pay After Confirmation</label>
+</div><button class="btn main-btn full" onclick="saveSettings()">Save Payment / Contact</button></div></div>
+<div id="deliveryTab" class="admin-section hidden"><div class="box"><h2>Delivery Settings</h2><div class="form-grid"><label>Delivery Mode<select id="deliveryMode"><option value="distance">Distance Based</option><option value="flat">Same Price For All</option><option value="free">Free Delivery</option></select></label><label>Flat Delivery Price<input id="flatRate" type="number"></label><label class="check-row"><input id="freeDelivery" type="checkbox"> Force Free Delivery</label><label>Store ZIP<input id="storeZip" type="text"></label><label>10-50 miles price<input id="deliveryTier1" type="number"></label><label>50-100 miles price<input id="deliveryTier2" type="number"></label><label>100-200 miles price<input id="deliveryTier3" type="number"></label><label>Further than 200 miles price<input id="deliveryTier4" type="number"></label></div><button class="btn main-btn full" onclick="saveDeliverySettings()">Save Delivery</button></div></div>
+
+<div id="customersTab" class="admin-section hidden"><div class="box"><h2>Customer List</h2><p class="note">Customers are added automatically when an order is placed.</p><div id="customersList"></div></div></div>
+<div id="discountsTab" class="admin-section hidden"><div class="admin-grid"><div class="box"><h2>Add / Edit Discount</h2><input id="discountIndex" type="hidden"><label>Discount Code<input id="discountCodeAdmin" type="text" placeholder="SAVE10"></label><label>Type<select id="discountType"><option value="percent">Percent Off</option><option value="amount">Dollar Amount Off</option><option value="freeDelivery">Free Delivery</option></select></label><label>Amount<input id="discountAmount" type="number" placeholder="10"></label><label class="check-row"><input id="discountActive" type="checkbox" checked> Active</label><button class="btn main-btn full" onclick="saveDiscount()">Save Discount</button><button class="btn light-btn full" onclick="clearDiscount()">Clear</button></div><div class="box"><h2>Current Discount Codes</h2><div id="discountList"></div></div></div></div>
+<div id="usersTab" class="admin-section hidden"><div class="admin-grid"><div class="box"><h2>Change My Password</h2><label>Old Password<input id="oldPassword" type="password"></label><label>New Password<input id="changedPassword" type="password"></label><button class="btn main-btn full" onclick="changePassword()">Change Password</button></div><div class="box"><h2>Add Secondary Admin</h2><label>Username<input id="newUsername" type="text"></label><label>Password<input id="newPassword" type="password"></label><label>Role<input id="newRole" type="text" value="Secondary Admin"></label><h3>Permissions</h3><div class="permission-grid">
+<label><input class="perm-check" type="checkbox" value="site"> Website</label>
+<label><input class="perm-check" type="checkbox" value="pages"> Pages</label>
+<label><input class="perm-check" type="checkbox" value="products"> Dresses</label>
+<label><input class="perm-check" type="checkbox" value="orders"> Orders</label>
+<label><input class="perm-check" type="checkbox" value="customers"> Customers</label>
+<label><input class="perm-check" type="checkbox" value="discounts"> Discounts</label>
+<label><input class="perm-check" type="checkbox" value="settings"> Payment/Contact</label>
+<label><input class="perm-check" type="checkbox" value="delivery"> Delivery</label>
+<label><input class="perm-check" type="checkbox" value="users"> Admin Users</label>
+</div><button class="btn main-btn full" onclick="addUser()">Add Admin Account</button></div></div><div class="box"><h2>Admin Accounts</h2><div id="usersList"></div></div></div>
+</section></main><script src="script.js"></script><script>initAdmin(); if(document.getElementById("sectionType"))sectionTypeChanged();</script></body></html>
