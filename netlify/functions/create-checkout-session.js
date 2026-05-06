@@ -4,6 +4,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
@@ -15,34 +16,62 @@ exports.handler = async (event) => {
       throw new Error("STRIPE_SECRET_KEY is missing in Netlify environment variables.");
     }
 
-    const stripe = Stripe(secretKey);
-    const { order } = JSON.parse(event.body || "{}");
-
-    if (!order || !order.items || !order.items.length) {
-      throw new Error("Order is missing or has no items.");
+    if (!secretKey.startsWith("sk_")) {
+      throw new Error("STRIPE_SECRET_KEY must start with sk_test_ or sk_live_.");
     }
 
-    const siteUrl = process.env.URL || "https://www.bahiyafashionova.com";
+    const stripe = Stripe(secretKey);
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: order.items.map((item) => ({
+    const body = JSON.parse(event.body || "{}");
+    const order = body.order;
+
+    if (!order) {
+      throw new Error("Order data is missing.");
+    }
+
+    if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
+      throw new Error("Order has no items.");
+    }
+
+    const siteUrl =
+      process.env.SITE_URL ||
+      process.env.URL ||
+      "https://www.bahiyafashionova.com";
+
+    const lineItems = order.items.map((item) => {
+      const price = Number(item.price);
+      const qty = Number(item.qty || 1);
+
+      if (!price || price <= 0) {
+        throw new Error("Item price is missing or invalid.");
+      }
+
+      return {
         price_data: {
           currency: "usd",
           product_data: {
             name: item.name || "Dress",
           },
-          unit_amount: Math.round(Number(item.price) * 100),
+          unit_amount: Math.round(price * 100),
         },
-        quantity: Number(item.qty || 1),
-      })),
+        quantity: qty,
+      };
+    });
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: lineItems,
       success_url: `${siteUrl}/stripe-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/stripe-cancel.html`,
+      metadata: {
+        orderId: order.id || "",
+      },
     });
 
     return {
       statusCode: 200,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: session.url }),
     };
   } catch (err) {
@@ -50,6 +79,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 500,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         error: err.message,
         keyExists: !!process.env.STRIPE_SECRET_KEY,
