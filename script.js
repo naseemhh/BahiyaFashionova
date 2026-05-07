@@ -1054,7 +1054,20 @@ applySite = function () {
 
 async function syncSiteSettingsFromCloudAndRender() {
   await cloudLoadSiteSettings();
+
   applySite();
+
+  if (document.getElementById("featuredGrid")) {
+    renderHome();
+  }
+
+  if (document.getElementById("productGrid")) {
+    renderProducts();
+  }
+
+  if (document.getElementById("productDetail")) {
+    renderProductDetail();
+  }
 
   if (document.getElementById("siteName")) {
     loadSiteForm();
