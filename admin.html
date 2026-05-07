@@ -96,4 +96,22 @@
 <label><input class="perm-check" type="checkbox" value="delivery"> Delivery</label>
 <label><input class="perm-check" type="checkbox" value="users"> Admin Users</label>
 </div><button class="btn main-btn full" onclick="addUser()">Add Admin Account</button></div></div><div class="box"><h2>Admin Accounts</h2><div id="usersList"></div></div></div>
-</section></main><script src="script.js"></script><script>initAdmin(); if(document.getElementById("sectionType"))sectionTypeChanged();</script></body></html>
+</section>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script src="firebase-init.js"></script>
+<script src="script.js"></script>
+
+<script>
+initAdmin();
+
+if (document.getElementById("sectionType")) {
+  sectionTypeChanged();
+}
+</script>
+
+</body>
+</html>
