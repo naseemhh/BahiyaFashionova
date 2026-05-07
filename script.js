@@ -699,3 +699,274 @@ async function syncOrdersFromCloudAndRender() {
 window.addEventListener("load", function () {
   setTimeout(syncOrdersFromCloudAndRender, 700);
 });
+/* =========================================================
+   FIREBASE ADMIN + CUSTOMER ACCOUNT SYNC — BAHIYA FASHIONOVA
+   Step 3: Sync admin users and customer accounts
+   ========================================================= */
+
+function bahiyaFirebaseReady() {
+  return typeof window.db !== "undefined" && window.db !== null;
+}
+
+/* ---------- ADMIN USERS SYNC ---------- */
+
+async function cloudSaveAdminUsers(users) {
+  if (!bahiyaFirebaseReady()) {
+    console.warn("Firebase is not ready. Admin users saved locally only.");
+    return;
+  }
+
+  try {
+    await window.db.collection("store").doc("adminUsers").set({
+      items: users,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log("Admin users saved to Firebase.");
+  } catch (error) {
+    console.error("Could not save admin users to Firebase:", error);
+    alert("Admin users saved locally, but could not sync online.");
+  }
+}
+
+async function cloudLoadAdminUsers() {
+  if (!bahiyaFirebaseReady()) {
+    console.warn("Firebase is not ready. Loading local admin users only.");
+    return getUsers();
+  }
+
+  try {
+    const snap = await window.db.collection("store").doc("adminUsers").get();
+
+    if (snap.exists) {
+      const data = snap.data();
+
+      if (data && Array.isArray(data.items)) {
+        localStorage.setItem("adminUsers", JSON.stringify(data.items));
+        console.log("Admin users loaded from Firebase.");
+        return data.items;
+      }
+    }
+
+    return getUsers();
+  } catch (error) {
+    console.error("Could not load admin users from Firebase:", error);
+    return getUsers();
+  }
+}
+
+const originalSaveUsers = saveUsers;
+
+saveUsers = function (users) {
+  originalSaveUsers(users);
+  cloudSaveAdminUsers(users);
+};
+
+/* Run this once from your MAIN laptop to upload your current admin users */
+async function uploadCurrentAdminUsersToFirebase() {
+  const users = getUsers();
+  await cloudSaveAdminUsers(users);
+  alert("Current admin users uploaded to Firebase.");
+}
+
+/* ---------- CUSTOMER ACCOUNTS SYNC ---------- */
+
+async function cloudSaveCustomerAccounts(accounts) {
+  if (!bahiyaFirebaseReady()) {
+    console.warn("Firebase is not ready. Customer accounts saved locally only.");
+    return;
+  }
+
+  try {
+    await window.db.collection("store").doc("customerAccounts").set({
+      items: accounts,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log("Customer accounts saved to Firebase.");
+  } catch (error) {
+    console.error("Could not save customer accounts to Firebase:", error);
+    alert("Customer accounts saved locally, but could not sync online.");
+  }
+}
+
+async function cloudLoadCustomerAccounts() {
+  if (!bahiyaFirebaseReady()) {
+    console.warn("Firebase is not ready. Loading local customer accounts only.");
+    return getCustomerAccounts();
+  }
+
+  try {
+    const snap = await window.db.collection("store").doc("customerAccounts").get();
+
+    if (snap.exists) {
+      const data = snap.data();
+
+      if (data && Array.isArray(data.items)) {
+        localStorage.setItem("customerAccounts", JSON.stringify(data.items));
+        console.log("Customer accounts loaded from Firebase.");
+        return data.items;
+      }
+    }
+
+    const localAccounts = getCustomerAccounts();
+
+    if (localAccounts && localAccounts.length) {
+      await cloudSaveCustomerAccounts(localAccounts);
+      console.log("Firebase customer accounts were empty. Local customer accounts uploaded.");
+    }
+
+    return localAccounts;
+  } catch (error) {
+    console.error("Could not load customer accounts from Firebase:", error);
+    return getCustomerAccounts();
+  }
+}
+
+const originalSaveCustomerAccounts = saveCustomerAccounts;
+
+saveCustomerAccounts = function (accounts) {
+  originalSaveCustomerAccounts(accounts);
+  cloudSaveCustomerAccounts(accounts);
+};
+
+/* ---------- CUSTOMER ACCOUNT PAGE FIX ---------- */
+
+function createCustomerAccount() {
+  const name = document.getElementById("createName")?.value.trim();
+  const email = document.getElementById("createEmail")?.value.trim().toLowerCase();
+  const password = document.getElementById("createPassword")?.value;
+
+  if (!name || !email || !password) {
+    alert("Please fill in name, email, and password.");
+    return;
+  }
+
+  const accounts = getCustomerAccounts();
+
+  if (accounts.find((a) => a.email === email)) {
+    alert("This email already has an account.");
+    return;
+  }
+
+  const account = {
+    id: "CUST-" + Date.now(),
+    name,
+    email,
+    password,
+    createdAt: new Date().toISOString()
+  };
+
+  accounts.push(account);
+  saveCustomerAccounts(accounts);
+
+  localStorage.setItem("activeCustomerEmail", email);
+
+  alert("Account created successfully.");
+  renderAccount();
+}
+
+function loginCustomer() {
+  const email = document.getElementById("loginEmail")?.value.trim().toLowerCase();
+  const password = document.getElementById("loginPassword")?.value;
+
+  const accounts = getCustomerAccounts();
+  const account = accounts.find((a) => a.email === email && a.password === password);
+
+  if (!account) {
+    alert("Wrong email or password.");
+    return;
+  }
+
+  localStorage.setItem("activeCustomerEmail", email);
+
+  alert("Login successful.");
+  renderAccount();
+}
+
+function logoutCustomer() {
+  localStorage.removeItem("activeCustomerEmail");
+  renderAccount();
+}
+
+function renderAccount() {
+  applySite();
+  updateCartCount();
+  renderHeaderPageLinks();
+
+  const forms = document.getElementById("accountForms");
+  const dash = document.getElementById("accountDashboard");
+
+  if (!forms || !dash) return;
+
+  const email = currentCustomer();
+
+  if (!email) {
+    forms.classList.remove("hidden");
+    dash.classList.add("hidden");
+    dash.innerHTML = "";
+    return;
+  }
+
+  const account = getCustomerAccounts().find((a) => a.email === email);
+  const orders = getOrders().filter((o) => {
+    const orderEmail = String(o.customer?.email || "").toLowerCase();
+    return orderEmail && orderEmail === email;
+  });
+
+  forms.classList.add("hidden");
+  dash.classList.remove("hidden");
+
+  dash.innerHTML = `
+    <div class="box">
+      <h2>Welcome ${account ? account.name : email}</h2>
+      <p><strong>Email:</strong> ${email}</p>
+      <button class="btn danger-btn" onclick="logoutCustomer()">Logout</button>
+    </div>
+
+    <div class="box">
+      <h2>My Orders</h2>
+      ${
+        orders.length
+          ? orders.map((o) => `
+              <div class="admin-item">
+                <div>
+                  <strong>${o.id}</strong><br>
+                  Status: ${o.status || "Pending"}<br>
+                  Total: ${money(o.total)}<br>
+                  Tracking: ${o.trackingNumber || "Not added yet"}
+                  ${
+                    o.trackingLink
+                      ? `<br><a class="btn light-btn" href="${o.trackingLink}" target="_blank">Track Package</a>`
+                      : ""
+                  }
+                </div>
+                <a class="btn main-btn" href="order.html?id=${o.id}">View Order</a>
+              </div>
+            `).join("")
+          : `<p class="note">No orders found yet.</p>`
+      }
+    </div>
+  `;
+}
+
+/* ---------- LOAD CLOUD ACCOUNTS ON PAGE LOAD ---------- */
+
+async function syncAccountsFromCloudAndRender() {
+  await cloudLoadAdminUsers();
+  await cloudLoadCustomerAccounts();
+
+  if (document.getElementById("accountDashboard")) {
+    renderAccount();
+  }
+
+  if (document.getElementById("usersList")) {
+    renderUsers();
+  }
+
+  console.log("Account sync complete.");
+}
+
+window.addEventListener("load", function () {
+  setTimeout(syncAccountsFromCloudAndRender, 1000);
+});
