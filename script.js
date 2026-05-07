@@ -521,3 +521,98 @@ function addUser(){if(!requirePermission("users"))return;const u=document.getEle
 function changePassword(){if(!requirePermission("users"))return;const u=currentUser();const oldP=document.getElementById("oldPassword").value;const newP=document.getElementById("changedPassword").value;if(!newP){alert("Enter new password.");return}const users=getUsers();const me=users.find(x=>x.username===u);if(!me||me.password!==oldP){alert("Old password is wrong.");return}me.password=newP;saveUsers(users);document.getElementById("oldPassword").value="";document.getElementById("changedPassword").value="";alert("Password changed.")}
 function deleteUser(username){if(!requirePermission("users"))return;if(confirm("Delete this admin account?")){saveUsers(getUsers().filter(u=>u.username!==username));renderUsers()}}
 applySite();updateCartCount();
+/* =========================================================
+   FIREBASE PRODUCT SYNC — BAHIYA FASHIONOVA
+   Step 1: Sync dresses/products across devices
+   ========================================================= */
+
+const CLOUD_PRODUCTS_DOC = "products";
+
+function firebaseReady() {
+  return typeof window.db !== "undefined" && window.db !== null;
+}
+
+async function cloudSaveProducts(products) {
+  if (!firebaseReady()) {
+    console.warn("Firebase is not ready. Products saved locally only.");
+    return;
+  }
+
+  try {
+    await window.db.collection("store").doc(CLOUD_PRODUCTS_DOC).set({
+      items: products,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log("Products saved to Firebase.");
+  } catch (error) {
+    console.error("Could not save products to Firebase:", error);
+    alert("Products saved locally, but could not sync online.");
+  }
+}
+
+async function cloudLoadProducts() {
+  if (!firebaseReady()) {
+    console.warn("Firebase is not ready. Loading local products only.");
+    return getProducts();
+  }
+
+  try {
+    const snap = await window.db.collection("store").doc(CLOUD_PRODUCTS_DOC).get();
+
+    if (snap.exists) {
+      const data = snap.data();
+
+      if (data && Array.isArray(data.items)) {
+        localStorage.setItem("products", JSON.stringify(data.items));
+        console.log("Products loaded from Firebase.");
+        return data.items;
+      }
+    }
+
+    const localProducts = getProducts();
+
+    if (localProducts && localProducts.length) {
+      await cloudSaveProducts(localProducts);
+      console.log("Firebase was empty. Local products uploaded.");
+    }
+
+    return localProducts;
+  } catch (error) {
+    console.error("Could not load products from Firebase:", error);
+    return getProducts();
+  }
+}
+
+const originalSaveProducts = saveProducts;
+
+saveProducts = function (products) {
+  originalSaveProducts(products);
+  cloudSaveProducts(products);
+};
+
+async function syncProductsFromCloudAndRender() {
+  await cloudLoadProducts();
+
+  if (document.getElementById("adminDressList")) {
+    renderAdminDressList();
+  }
+
+  if (document.getElementById("productGrid")) {
+    renderProducts();
+  }
+
+  if (document.getElementById("featuredGrid")) {
+    renderHome();
+  }
+
+  if (document.getElementById("productDetail")) {
+    renderProductDetail();
+  }
+
+  console.log("Product sync complete.");
+}
+
+window.addEventListener("load", function () {
+  setTimeout(syncProductsFromCloudAndRender, 500);
+});
