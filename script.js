@@ -616,3 +616,86 @@ async function syncProductsFromCloudAndRender() {
 window.addEventListener("load", function () {
   setTimeout(syncProductsFromCloudAndRender, 500);
 });
+/* =========================================================
+   FIREBASE ORDER SYNC — BAHIYA FASHIONOVA
+   Step 2: Sync orders across devices
+   ========================================================= */
+
+const CLOUD_ORDERS_DOC = "orders";
+
+async function cloudSaveOrders(orders) {
+  if (!firebaseReady()) {
+    console.warn("Firebase is not ready. Orders saved locally only.");
+    return;
+  }
+
+  try {
+    await window.db.collection("store").doc(CLOUD_ORDERS_DOC).set({
+      items: orders,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log("Orders saved to Firebase.");
+  } catch (error) {
+    console.error("Could not save orders to Firebase:", error);
+    alert("Orders saved locally, but could not sync online.");
+  }
+}
+
+async function cloudLoadOrders() {
+  if (!firebaseReady()) {
+    console.warn("Firebase is not ready. Loading local orders only.");
+    return getOrders();
+  }
+
+  try {
+    const snap = await window.db.collection("store").doc(CLOUD_ORDERS_DOC).get();
+
+    if (snap.exists) {
+      const data = snap.data();
+
+      if (data && Array.isArray(data.items)) {
+        localStorage.setItem("orders", JSON.stringify(data.items));
+        console.log("Orders loaded from Firebase.");
+        return data.items;
+      }
+    }
+
+    const localOrders = getOrders();
+
+    if (localOrders && localOrders.length) {
+      await cloudSaveOrders(localOrders);
+      console.log("Firebase orders were empty. Local orders uploaded.");
+    }
+
+    return localOrders;
+  } catch (error) {
+    console.error("Could not load orders from Firebase:", error);
+    return getOrders();
+  }
+}
+
+const originalSaveOrders = saveOrders;
+
+saveOrders = function (orders) {
+  originalSaveOrders(orders);
+  cloudSaveOrders(orders);
+};
+
+async function syncOrdersFromCloudAndRender() {
+  await cloudLoadOrders();
+
+  if (document.getElementById("ordersList")) {
+    renderOrders();
+  }
+
+  if (document.getElementById("customersList")) {
+    renderCustomers();
+  }
+
+  console.log("Order sync complete.");
+}
+
+window.addEventListener("load", function () {
+  setTimeout(syncOrdersFromCloudAndRender, 700);
+});
