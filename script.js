@@ -970,3 +970,99 @@ async function syncAccountsFromCloudAndRender() {
 window.addEventListener("load", function () {
   setTimeout(syncAccountsFromCloudAndRender, 1000);
 });
+/* =========================================================
+   FIREBASE WEBSITE SETTINGS SYNC — BAHIYA FASHIONOVA
+   Step 4: Sync website settings + prepare logo support
+   ========================================================= */
+
+async function cloudSaveSiteSettings(site) {
+  if (!bahiyaFirebaseReady()) {
+    console.warn("Firebase is not ready. Site settings saved locally only.");
+    return;
+  }
+
+  try {
+    await window.db.collection("store").doc("siteSettings").set({
+      data: site,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log("Site settings saved to Firebase.");
+  } catch (error) {
+    console.error("Could not save site settings to Firebase:", error);
+    alert("Website settings saved locally, but could not sync online.");
+  }
+}
+
+async function cloudLoadSiteSettings() {
+  if (!bahiyaFirebaseReady()) {
+    console.warn("Firebase is not ready. Loading local site settings only.");
+    return getSite();
+  }
+
+  try {
+    const snap = await window.db.collection("store").doc("siteSettings").get();
+
+    if (snap.exists) {
+      const data = snap.data();
+
+      if (data && data.data) {
+        localStorage.setItem("site", JSON.stringify(data.data));
+        console.log("Site settings loaded from Firebase.");
+        return data.data;
+      }
+    }
+
+    const localSite = getSite();
+    await cloudSaveSiteSettings(localSite);
+    console.log("Firebase site settings were empty. Local site settings uploaded.");
+
+    return localSite;
+  } catch (error) {
+    console.error("Could not load site settings from Firebase:", error);
+    return getSite();
+  }
+}
+
+const originalSaveSite = saveSite;
+
+saveSite = function (site) {
+  originalSaveSite(site);
+  cloudSaveSiteSettings(site);
+};
+
+/* Logo support */
+function applyLogoIfExists() {
+  const site = getSite();
+  const logoUrl = site.logoUrl || "";
+
+  document.querySelectorAll(".logo").forEach((logo) => {
+    if (logoUrl) {
+      logo.innerHTML = `<img src="${logoUrl}" alt="${site.siteName || "Bahiya Fashionova"}" style="max-height:48px;max-width:180px;object-fit:contain;">`;
+    } else {
+      logo.textContent = site.siteName || "Bahiya Fashionova";
+    }
+  });
+}
+
+const originalApplySite = applySite;
+
+applySite = function () {
+  originalApplySite();
+  applyLogoIfExists();
+};
+
+async function syncSiteSettingsFromCloudAndRender() {
+  await cloudLoadSiteSettings();
+  applySite();
+
+  if (document.getElementById("siteName")) {
+    loadSiteForm();
+  }
+
+  console.log("Site settings sync complete.");
+}
+
+window.addEventListener("load", function () {
+  setTimeout(syncSiteSettingsFromCloudAndRender, 1200);
+});
