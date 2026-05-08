@@ -613,8 +613,13 @@ async function syncProductsFromCloudAndRender() {
   console.log("Product sync complete.");
 }
 
-window.addEventListener("load", function () {
-  setTimeout(syncProductsFromCloudAndRender, 500);
+window.addEventListener("load", async function () {
+
+  await syncProductsFromCloudAndRender();
+
+  document.body.classList.remove("loading");
+  document.body.classList.add("loaded");
+
 });
 /* =========================================================
    FIREBASE ORDER SYNC — BAHIYA FASHIONOVA
@@ -696,8 +701,10 @@ async function syncOrdersFromCloudAndRender() {
   console.log("Order sync complete.");
 }
 
-window.addEventListener("load", function () {
-  setTimeout(syncOrdersFromCloudAndRender, 700);
+window.addEventListener("load", async function () {
+
+  await syncOrdersFromCloudAndRender();
+
 });
 /* =========================================================
    FIREBASE ADMIN + CUSTOMER ACCOUNT SYNC — BAHIYA FASHIONOVA
