@@ -613,14 +613,6 @@ async function syncProductsFromCloudAndRender() {
   console.log("Product sync complete.");
 }
 
-window.addEventListener("load", async function () {
-
-  await syncProductsFromCloudAndRender();
-
-  document.body.classList.remove("loading");
-  document.body.classList.add("loaded");
-
-});
 /* =========================================================
    FIREBASE ORDER SYNC — BAHIYA FASHIONOVA
    Step 2: Sync orders across devices
@@ -701,11 +693,6 @@ async function syncOrdersFromCloudAndRender() {
   console.log("Order sync complete.");
 }
 
-window.addEventListener("load", async function () {
-
-  await syncOrdersFromCloudAndRender();
-
-});
 /* =========================================================
    FIREBASE ADMIN + CUSTOMER ACCOUNT SYNC — BAHIYA FASHIONOVA
    Step 3: Sync admin users and customer accounts
@@ -1279,3 +1266,36 @@ async function uploadCurrentWebsiteSettingsToFirebase() {
 
   alert("Current website settings, pages, and payment/contact settings uploaded to Firebase.");
 }
+/* =========================================
+   MASTER WEBSITE STARTUP LOADER
+========================================= */
+
+window.addEventListener("load", async function () {
+
+  try {
+
+    // LOAD PRODUCTS
+    await syncProductsFromCloudAndRender();
+
+    // LOAD ORDERS
+    await syncOrdersFromCloudAndRender();
+
+    // RENDER PUBLIC NAV
+    renderPublicNavPages();
+
+    // FINAL HOME RENDER
+    if (document.getElementById("featuredGrid")) {
+      renderHome();
+    }
+
+  } catch (error) {
+
+    console.error("Startup loading error:", error);
+
+  }
+
+  // SHOW WEBSITE
+  document.body.classList.remove("loading");
+  document.body.classList.add("loaded");
+
+});
