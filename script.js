@@ -1079,3 +1079,97 @@ async function syncSiteSettingsFromCloudAndRender() {
 window.addEventListener("load", function () {
   setTimeout(syncSiteSettingsFromCloudAndRender, 1200);
 });
+/* =========================================================
+   FIREBASE PAYMENT / CONTACT SETTINGS SYNC
+   Sync WhatsApp, Zelle, PayPal, Stripe publishable key, tax
+   ========================================================= */
+
+async function cloudSavePaymentSettings(settings) {
+  if (!bahiyaFirebaseReady()) {
+    console.warn("Firebase is not ready. Payment settings saved locally only.");
+    return;
+  }
+
+  try {
+    await window.db.collection("store").doc("paymentSettings").set({
+      data: settings,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log("Payment/contact settings saved to Firebase.");
+  } catch (error) {
+    console.error("Could not save payment settings to Firebase:", error);
+    alert("Payment settings saved locally, but could not sync online.");
+  }
+}
+
+async function cloudLoadPaymentSettings() {
+  if (!bahiyaFirebaseReady()) {
+    console.warn("Firebase is not ready. Loading local payment settings only.");
+    return getSettings();
+  }
+
+  try {
+    const snap = await window.db.collection("store").doc("paymentSettings").get();
+
+    if (snap.exists) {
+      const data = snap.data();
+
+      if (data && data.data) {
+        localStorage.setItem("settings", JSON.stringify(data.data));
+        console.log("Payment/contact settings loaded from Firebase.");
+        return data.data;
+      }
+    }
+
+    const localSettings = getSettings();
+    await cloudSavePaymentSettings(localSettings);
+    console.log("Firebase payment settings were empty. Local settings uploaded.");
+
+    return localSettings;
+  } catch (error) {
+    console.error("Could not load payment settings from Firebase:", error);
+    return getSettings();
+  }
+}
+
+const originalSaveSettingsData = saveSettingsData;
+
+saveSettingsData = function (settings) {
+  originalSaveSettingsData(settings);
+  cloudSavePaymentSettings(settings);
+};
+
+async function syncPaymentSettingsFromCloud() {
+  await cloudLoadPaymentSettings();
+
+  if (document.getElementById("settingWhatsapp")) {
+    const s = getSettings();
+
+    document.getElementById("settingWhatsapp").value = s.whatsapp || "";
+    document.getElementById("settingZelleName").value = s.zelleName || "";
+    document.getElementById("settingZelleContact").value = s.zelleContact || "";
+    document.getElementById("paypalLink").value = s.paypalLink || "";
+    document.getElementById("creditCardLink").value = s.creditCardLink || "";
+    document.getElementById("stripePublishableKey").value = s.stripePublishableKey || "";
+    document.getElementById("settingGoogleApiKey").value = s.googleApiKey || "";
+    document.getElementById("settingTax").value = s.taxPercent || 0;
+
+    document.getElementById("enableCreditCard").checked = !!s.enableCreditCard;
+    document.getElementById("enablePayPal").checked = !!s.enablePayPal;
+    document.getElementById("enableZelle").checked = !!s.enableZelle;
+    document.getElementById("enableCash").checked = !!s.enableCash;
+    document.getElementById("settingAllowPayLater").checked = !!s.allowPayLater;
+  }
+
+  const whatsappBtn = document.getElementById("whatsappBtn");
+  if (whatsappBtn) {
+    whatsappBtn.href = "https://wa.me/" + (getSettings().whatsapp || "");
+  }
+
+  console.log("Payment/contact settings sync complete.");
+}
+
+window.addEventListener("load", function () {
+  setTimeout(syncPaymentSettingsFromCloud, 1400);
+});
