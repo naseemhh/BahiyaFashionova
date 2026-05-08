@@ -1173,3 +1173,102 @@ async function syncPaymentSettingsFromCloud() {
 window.addEventListener("load", function () {
   setTimeout(syncPaymentSettingsFromCloud, 1400);
 });
+/* =========================================================
+   FIREBASE SITE + PAGES + PAYMENT FULL SYNC FIX
+   ========================================================= */
+
+async function cloudSavePages(pages) {
+  if (!bahiyaFirebaseReady()) return;
+
+  await window.db.collection("store").doc("pages").set({
+    items: pages,
+    updatedAt: new Date().toISOString()
+  });
+
+  console.log("Pages saved to Firebase.");
+}
+
+async function cloudLoadPages() {
+  if (!bahiyaFirebaseReady()) return getPages();
+
+  const snap = await window.db.collection("store").doc("pages").get();
+
+  if (snap.exists) {
+    const data = snap.data();
+
+    if (data && Array.isArray(data.items)) {
+      localStorage.setItem("pages", JSON.stringify(data.items));
+      console.log("Pages loaded from Firebase.");
+      return data.items;
+    }
+  }
+
+  const localPages = getPages();
+  await cloudSavePages(localPages);
+  return localPages;
+}
+
+const originalSavePages = savePages;
+
+savePages = function (pages) {
+  originalSavePages(pages);
+  cloudSavePages(pages);
+};
+
+async function syncEverythingVisualFromCloud() {
+  try {
+    if (typeof cloudLoadSiteSettings === "function") {
+      await cloudLoadSiteSettings();
+    }
+
+    if (typeof cloudLoadPaymentSettings === "function") {
+      await cloudLoadPaymentSettings();
+    }
+
+    await cloudLoadPages();
+
+    applySite();
+
+    if (document.getElementById("featuredGrid")) {
+      renderHome();
+      renderPublicNavPages();
+    }
+
+    if (document.getElementById("productGrid")) {
+      renderProducts();
+    }
+
+    if (document.getElementById("headerPageLinks")) {
+      renderHeaderPageLinks();
+    }
+
+    const whatsappBtn = document.getElementById("whatsappBtn");
+    if (whatsappBtn) {
+      whatsappBtn.href = "https://wa.me/" + (getSettings().whatsapp || "");
+    }
+
+    console.log("Full visual/site sync complete.");
+  } catch (error) {
+    console.error("Full visual/site sync failed:", error);
+  }
+}
+
+/* Run after other Firebase syncs */
+window.addEventListener("load", function () {
+  setTimeout(syncEverythingVisualFromCloud, 2000);
+});
+
+/* One-time helper: upload current laptop settings/pages/payment to Firebase */
+async function uploadCurrentWebsiteSettingsToFirebase() {
+  if (typeof cloudSaveSiteSettings === "function") {
+    await cloudSaveSiteSettings(getSite());
+  }
+
+  if (typeof cloudSavePaymentSettings === "function") {
+    await cloudSavePaymentSettings(getSettings());
+  }
+
+  await cloudSavePages(getPages());
+
+  alert("Current website settings, pages, and payment/contact settings uploaded to Firebase.");
+}
