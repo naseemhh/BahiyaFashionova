@@ -143,3 +143,17 @@ pre{white-space:pre-wrap;background:white;border:1px solid var(--border);border-
 .header-page-links{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .header-page-links a{font-weight:700}
 @media(max-width:850px){.page-section.banner-section h2{font-size:30px}}
+/* ========================================
+   PAGE LOADING STATE
+======================================== */
+
+body.loading {
+    opacity: 0;
+    visibility: hidden;
+}
+
+body.loaded {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease;
+}
