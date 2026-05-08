@@ -520,7 +520,7 @@ function selectedPermissions(){return Array.from(document.querySelectorAll(".per
 function addUser(){if(!requirePermission("users"))return;const u=document.getElementById("newUsername").value.trim();const p=document.getElementById("newPassword").value;const r=document.getElementById("newRole").value.trim()||"Secondary Admin";if(!u||!p){alert("Add username and password.");return}const users=getUsers();if(users.some(x=>x.username===u)){alert("Username already exists.");return}users.push({username:u,password:p,role:r,permissions:selectedPermissions()});saveUsers(users);renderUsers();document.getElementById("newUsername").value="";document.getElementById("newPassword").value="";alert("Admin account added.")}
 function changePassword(){if(!requirePermission("users"))return;const u=currentUser();const oldP=document.getElementById("oldPassword").value;const newP=document.getElementById("changedPassword").value;if(!newP){alert("Enter new password.");return}const users=getUsers();const me=users.find(x=>x.username===u);if(!me||me.password!==oldP){alert("Old password is wrong.");return}me.password=newP;saveUsers(users);document.getElementById("oldPassword").value="";document.getElementById("changedPassword").value="";alert("Password changed.")}
 function deleteUser(username){if(!requirePermission("users"))return;if(confirm("Delete this admin account?")){saveUsers(getUsers().filter(u=>u.username!==username));renderUsers()}}
-applySite();updateCartCount();
+
 /* =========================================================
    FIREBASE PRODUCT SYNC — BAHIYA FASHIONOVA
    Step 1: Sync dresses/products across devices
@@ -1280,12 +1280,34 @@ window.addEventListener("load", async function () {
     // LOAD ORDERS
     await syncOrdersFromCloudAndRender();
 
+    // LOAD ADMIN USERS
+    await cloudLoadAdminUsers();
+
+    // LOAD CUSTOMER ACCOUNTS
+    await cloudLoadCustomerAccounts();
+
+    // APPLY FINAL SITE SETTINGS
+    applySite();
+
+    // UPDATE CART
+    updateCartCount();
+
     // RENDER PUBLIC NAV
     renderPublicNavPages();
 
-    // FINAL HOME RENDER
+    // HOME PAGE
     if (document.getElementById("featuredGrid")) {
       renderHome();
+    }
+
+    // PRODUCTS PAGE
+    if (document.getElementById("productGrid")) {
+      renderProducts();
+    }
+
+    // PRODUCT DETAIL PAGE
+    if (document.getElementById("productDetail")) {
+      renderProductDetail();
     }
 
   } catch (error) {
