@@ -1321,3 +1321,65 @@ window.addEventListener("load", async function () {
   document.body.classList.add("loaded");
 
 });
+/* =========================================================
+   FIREBASE DISCOUNT CODE SYNC
+   ========================================================= */
+
+async function cloudSaveDiscounts(discounts) {
+  if (!bahiyaFirebaseReady()) return;
+
+  await window.db.collection("store").doc("discounts").set({
+    items: discounts,
+    updatedAt: new Date().toISOString()
+  });
+
+  console.log("Discount codes saved to Firebase.");
+}
+
+async function cloudLoadDiscounts() {
+  if (!bahiyaFirebaseReady()) return getDiscounts();
+
+  const snap = await window.db.collection("store").doc("discounts").get();
+
+  if (snap.exists) {
+    const data = snap.data();
+
+    if (data && Array.isArray(data.items)) {
+      localStorage.setItem("discounts", JSON.stringify(data.items));
+      console.log("Discount codes loaded from Firebase.");
+      return data.items;
+    }
+  }
+
+  const localDiscounts = getDiscounts();
+  await cloudSaveDiscounts(localDiscounts);
+
+  return localDiscounts;
+}
+
+const originalSaveDiscounts = saveDiscounts;
+
+saveDiscounts = function (discounts) {
+  originalSaveDiscounts(discounts);
+  cloudSaveDiscounts(discounts);
+};
+
+async function syncDiscountsFromCloud() {
+  await cloudLoadDiscounts();
+
+  if (document.getElementById("discountList")) {
+    renderDiscounts();
+  }
+
+  console.log("Discount sync complete.");
+}
+
+window.addEventListener("load", function () {
+  setTimeout(syncDiscountsFromCloud, 1700);
+});
+
+/* One-time upload helper */
+async function uploadCurrentDiscountsToFirebase() {
+  await cloudSaveDiscounts(getDiscounts());
+  alert("Discount codes uploaded to Firebase.");
+}
