@@ -1434,33 +1434,6 @@ async function cloudLoadDeliverySettings() {
   }
 }
 
-  
-
-const originalSaveDeliverySettings = saveDeliverySettings;
-
-saveDeliverySettings = function () {
-  originalSaveDeliverySettings();
-
-  const deliveryData = getDelivery();
-
-  cloudSaveDeliverySettings(deliveryData);
-};
-
-async function syncDeliverySettingsFromCloud() {
-  await cloudLoadDeliverySettings();
-
-  console.log("Delivery settings sync complete.");
-}
-
-window.addEventListener("load", function () {
-  setTimeout(syncDeliverySettingsFromCloud, 1800);
-});
-
-/* One-time upload helper */
-async function uploadCurrentDeliverySettingsToFirebase() {
-  await cloudSaveDeliverySettings(getDeliverySettings());
-  alert("Delivery settings uploaded to Firebase.");
-}
 /* =========================================================
    FIREBASE DELIVERY / SHIPPING SETTINGS SYNC
    ========================================================= */
