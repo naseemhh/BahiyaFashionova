@@ -1433,6 +1433,14 @@ async function cloudLoadDeliverySettings() {
   }
 }
 
+    return getDelivery();
+
+  } catch (error) {
+    console.error("Could not load delivery settings:", error);
+    return getDelivery();
+  }
+}
+
   const localData = getDeliverySettings();
   await cloudSaveDeliverySettings(localData);
 
