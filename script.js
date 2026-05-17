@@ -1438,9 +1438,12 @@ async function cloudLoadDeliverySettings() {
 
 const originalSaveDeliverySettings = saveDeliverySettings;
 
-saveDeliverySettings = function (data) {
-  originalSaveDeliverySettings(data);
-  cloudSaveDeliverySettings(data);
+saveDeliverySettings = function () {
+  originalSaveDeliverySettings();
+
+  const deliveryData = getDelivery();
+
+  cloudSaveDeliverySettings(deliveryData);
 };
 
 async function syncDeliverySettingsFromCloud() {
