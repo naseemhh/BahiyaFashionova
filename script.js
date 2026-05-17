@@ -1397,7 +1397,6 @@ async function cloudSaveDeliverySettings(data) {
   });
 
   console.log("Delivery settings saved to Firebase.");
-}le.log("Delivery settings saved to Firebase.");
 }
 
 async function cloudLoadDeliverySettings() {
