@@ -1441,3 +1441,48 @@ async function uploadCurrentDeliverySettingsToFirebase() {
   await cloudSaveDeliverySettings(getDeliverySettings());
   alert("Delivery settings uploaded to Firebase.");
 }
+/* =========================================================
+   DELIVERY SETTINGS FINAL FIX
+   Merge delivery settings into main settings everywhere
+   ========================================================= */
+
+async function cloudLoadDeliverySettings() {
+  if (!bahiyaFirebaseReady()) return getSettings();
+
+  const snap = await window.db.collection("store").doc("deliverySettings").get();
+
+  if (snap.exists) {
+    const data = snap.data();
+
+    if (data && data.data) {
+      localStorage.setItem("settings", JSON.stringify(data.data));
+      console.log("Delivery settings loaded into main settings.");
+      return data.data;
+    }
+  }
+
+  return getSettings();
+}
+
+async function syncDeliverySettingsFromCloud() {
+  await cloudLoadDeliverySettings();
+
+  if (document.getElementById("deliveryMode")) {
+    const s = getSettings();
+
+    document.getElementById("deliveryMode").value = s.deliveryMode || "distance";
+    document.getElementById("flatRate").value = s.flatRate || 0;
+    document.getElementById("freeDelivery").checked = !!s.freeDelivery;
+    document.getElementById("storeZip").value = s.storeZip || "";
+    document.getElementById("deliveryTier1").value = s.deliveryTier1 || 0;
+    document.getElementById("deliveryTier2").value = s.deliveryTier2 || 0;
+    document.getElementById("deliveryTier3").value = s.deliveryTier3 || 0;
+    document.getElementById("deliveryTier4").value = s.deliveryTier4 || 0;
+  }
+
+  console.log("Delivery settings synced and applied.");
+}
+
+window.addEventListener("load", function () {
+  setTimeout(syncDeliverySettingsFromCloud, 2200);
+});
