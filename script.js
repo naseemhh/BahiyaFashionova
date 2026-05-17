@@ -1383,3 +1383,61 @@ async function uploadCurrentDiscountsToFirebase() {
   await cloudSaveDiscounts(getDiscounts());
   alert("Discount codes uploaded to Firebase.");
 }
+/* =========================================================
+   FIREBASE DELIVERY / SHIPPING SETTINGS SYNC
+   ========================================================= */
+
+async function cloudSaveDeliverySettings(data) {
+  if (!bahiyaFirebaseReady()) return;
+
+  await window.db.collection("store").doc("deliverySettings").set({
+    data,
+    updatedAt: new Date().toISOString()
+  });
+
+  console.log("Delivery settings saved to Firebase.");
+}
+
+async function cloudLoadDeliverySettings() {
+  if (!bahiyaFirebaseReady()) return getDeliverySettings();
+
+  const snap = await window.db.collection("store").doc("deliverySettings").get();
+
+  if (snap.exists) {
+    const data = snap.data();
+
+    if (data && data.data) {
+      localStorage.setItem("deliverySettings", JSON.stringify(data.data));
+      console.log("Delivery settings loaded from Firebase.");
+      return data.data;
+    }
+  }
+
+  const localData = getDeliverySettings();
+  await cloudSaveDeliverySettings(localData);
+
+  return localData;
+}
+
+const originalSaveDeliverySettings = saveDeliverySettings;
+
+saveDeliverySettings = function (data) {
+  originalSaveDeliverySettings(data);
+  cloudSaveDeliverySettings(data);
+};
+
+async function syncDeliverySettingsFromCloud() {
+  await cloudLoadDeliverySettings();
+
+  console.log("Delivery settings sync complete.");
+}
+
+window.addEventListener("load", function () {
+  setTimeout(syncDeliverySettingsFromCloud, 1800);
+});
+
+/* One-time upload helper */
+async function uploadCurrentDeliverySettingsToFirebase() {
+  await cloudSaveDeliverySettings(getDeliverySettings());
+  alert("Delivery settings uploaded to Firebase.");
+}
