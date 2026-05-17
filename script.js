@@ -1389,12 +1389,15 @@ async function uploadCurrentDiscountsToFirebase() {
 async function cloudSaveDeliverySettings(data) {
   if (!bahiyaFirebaseReady()) return;
 
+  const cleanData = JSON.parse(JSON.stringify(data || {}));
+
   await window.db.collection("store").doc("deliverySettings").set({
-    data,
+    data: cleanData,
     updatedAt: new Date().toISOString()
   });
 
   console.log("Delivery settings saved to Firebase.");
+}le.log("Delivery settings saved to Firebase.");
 }
 
 async function cloudLoadDeliverySettings() {
