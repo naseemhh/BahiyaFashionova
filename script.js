@@ -1408,19 +1408,30 @@ async function cloudSaveDeliverySettings(data) {
 }
 
 async function cloudLoadDeliverySettings() {
-  if (!bahiyaFirebaseReady()) return getDeliverySettings();
+  if (!bahiyaFirebaseReady()) return getDelivery();
 
-  const snap = await window.db.collection("store").doc("deliverySettings").get();
+  try {
+    const snap = await window.db.collection("store").doc("deliverySettings").get();
 
-  if (snap.exists) {
-    const data = snap.data();
+    if (snap.exists) {
+      const data = snap.data();
 
-    if (data && data.data) {
-      localStorage.setItem("deliverySettings", JSON.stringify(data.data));
-      console.log("Delivery settings loaded from Firebase.");
-      return data.data;
+      if (data && data.data) {
+        localStorage.setItem("delivery", JSON.stringify(data.data));
+
+        console.log("Delivery settings loaded from Firebase.");
+
+        return data.data;
+      }
     }
+
+    return getDelivery();
+
+  } catch (error) {
+    console.error("Could not load delivery settings:", error);
+    return getDelivery();
   }
+}
 
   const localData = getDeliverySettings();
   await cloudSaveDeliverySettings(localData);
