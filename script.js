@@ -485,18 +485,26 @@ function saveSettings(){
  alert("Payment/contact settings saved.");
 }
 function saveDeliverySettings(){
- if(!requirePermission("delivery"))return;
- saveDeliveryData({
-  storeZip:document.getElementById("storeZip").value.trim()||"19006",
-  mode:document.getElementById("deliveryMode")?document.getElementById("deliveryMode").value:"distance",
-  flatRate:Number(document.getElementById("flatRate")?document.getElementById("flatRate").value||0:0),
-  freeDelivery:document.getElementById("freeDelivery")?document.getElementById("freeDelivery").checked:false,
-  tier1:Number(document.getElementById("deliveryTier1").value||20),
-  tier2:Number(document.getElementById("deliveryTier2").value||40),
-  tier3:Number(document.getElementById("deliveryTier3").value||60),
-  tier4:Number(document.getElementById("deliveryTier4").value||100)
- });
- alert("Delivery settings saved.");
+  if(!requirePermission("delivery"))return;
+
+  const deliveryData = {
+    storeZip: document.getElementById("storeZip").value.trim() || "19006",
+    mode: document.getElementById("deliveryMode") ? document.getElementById("deliveryMode").value : "distance",
+    flatRate: Number(document.getElementById("flatRate") ? document.getElementById("flatRate").value || 0 : 0),
+    freeDelivery: document.getElementById("freeDelivery") ? document.getElementById("freeDelivery").checked : false,
+    tier1: Number(document.getElementById("deliveryTier1").value || 20),
+    tier2: Number(document.getElementById("deliveryTier2").value || 40),
+    tier3: Number(document.getElementById("deliveryTier3").value || 60),
+    tier4: Number(document.getElementById("deliveryTier4").value || 100)
+  };
+
+  saveDeliveryData(deliveryData);
+
+  if (typeof cloudSaveDeliverySettings === "function") {
+    cloudSaveDeliverySettings(deliveryData);
+  }
+
+  alert("Delivery settings saved.");
 }
 function renderAdminDressList(){const box=document.getElementById("adminDressList");if(!box)return;box.innerHTML=getProducts().map(p=>`<div class="admin-item"><img src="${p.image||PLACEHOLDER}" onerror="this.src='${PLACEHOLDER}'"><div><strong>${p.name}</strong><br>Before: ${money(p.beforePrice)} / Sale: ${money(p.price)}</div><div><button class="btn light-btn" onclick="editDress('${p.id}')">Edit</button> <button class="btn danger-btn" onclick="deleteDress('${p.id}')">Delete</button></div></div>`).join("")}
 function clearDressForm(){["editId","dressName","dressBeforePrice","dressPrice","dressDescription","dressImage","dressImages"].forEach(id=>document.getElementById(id).value="")}
