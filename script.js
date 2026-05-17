@@ -1425,13 +1425,6 @@ async function cloudLoadDeliverySettings() {
       }
     }
 
-    return getDelivery();
-
-  } catch (error) {
-    console.error("Could not load delivery settings:", error);
-    return getDelivery();
-  }
-}
 
     return getDelivery();
 
@@ -1441,11 +1434,7 @@ async function cloudLoadDeliverySettings() {
   }
 }
 
-  const localData = getDeliverySettings();
-  await cloudSaveDeliverySettings(localData);
-
-  return localData;
-}
+  
 
 const originalSaveDeliverySettings = saveDeliverySettings;
 
