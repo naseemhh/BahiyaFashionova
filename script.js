@@ -1063,10 +1063,9 @@ async function syncSiteSettingsFromCloudAndRender() {
     renderProductDetail();
   }
 
-  if (document.getElementById("siteName")) {
+  if (document.getElementById("siteName") && typeof loadSiteForm === "function") {
     loadSiteForm();
   }
-
   console.log("Site settings sync complete.");
 }
 
